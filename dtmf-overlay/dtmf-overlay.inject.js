@@ -1,3 +1,4 @@
+/* dtmf-overlay.inject.js */
 (function () {
   'use strict';
 
@@ -111,6 +112,9 @@
 
     return $ov;
   }
+
+  // ---- Core UI -------------------------------------------------------------
+
   function renderParsed(entries) {
     var $sum = window.jQuery('#dtmf-summary');
     var $res = window.jQuery('#dtmf-results');
@@ -133,7 +137,7 @@
 
     var rows = entries.map(function (e, i) {
       var typeLabel = e.type === 'digits' ? 'Digits entered' : 'No digit entered';
-      var content   = e.type === 'digits' ? window.jQuery('<div/>').text(e.value).html() : '—';
+      var content   = e.type === 'digits' ? window.jQuery('<div/>').text(e.value).html() : 'â€”';
       return '<tr><td>' + (i + 1) + '</td><td>' + typeLabel + '</td><td>' + content + '</td></tr>';
     }).join('');
 
@@ -144,7 +148,7 @@
   }
 
   function renderRaw(text, urlUsed) {
-    var meta = 'Source: ' + urlUsed + ' · ' + text.length + ' bytes';
+    var meta = 'Source: ' + urlUsed + ' Â· ' + text.length + ' bytes';
     window.jQuery('#dtmf-summary').text(meta);
     document.getElementById('dtmf-raw').textContent = text; // raw goes in <pre>
   }
@@ -157,6 +161,7 @@
       })
       .then(function (txt) { return { txt: txt, used: csvUrl }; });
   }
+
   function openDtmfOverlay(el) {
     var $ = window.jQuery;
     var $row = $(el).closest('tr');
@@ -165,36 +170,37 @@
 
     injectStyles();
     var $ov = ensureOverlay($);
-    $('#dtmf-summary').text('Loading…');
+    $('#dtmf-summary').text('Loadingâ€¦');
     $('#dtmf-results').empty();
     $('#dtmf-raw').text('').hide(); // hidden until user clicks "Show raw"
     $ov.show();
 
     // cache by CSV URL
     window.__DTMF_CACHE__ = window.__DTMF_CACHE__ || {};
-        var csvUrl = csvUrlFrom(href);   // builds href-without-query + '/csv'
-        var key = csvUrl;
+	var csvUrl = csvUrlFrom(href);   // builds href-without-query + '/csv'
+	var key = csvUrl;
 
-        if (window.__DTMF_CACHE__[key]) {
-          var cached = window.__DTMF_CACHE__[key];
-          renderRaw(cached.txt, cached.used);
-          renderParsed(parseDtmfCsv(cached.txt));
-          return false;
-        }
+	if (window.__DTMF_CACHE__[key]) {
+	  var cached = window.__DTMF_CACHE__[key];
+	  renderRaw(cached.txt, cached.used);
+	  renderParsed(parseDtmfCsv(cached.txt));
+	  return false;
+	}
 
-        fetchCsvOnly(csvUrl)
-          .then(function (res) {
-            window.__DTMF_CACHE__[key] = res; // { txt, used }
-            renderRaw(res.txt, res.used);
-            renderParsed(parseDtmfCsv(res.txt));
-          })
-          .catch(function (err) {
-            if (window.console && console.error) console.error('DTMF CSV load failed:', err);
-            jQuery('#dtmf-summary').text('Failed to load SIP trace CSV for this call.');
+	fetchCsvOnly(csvUrl)
+	  .then(function (res) {
+	    window.__DTMF_CACHE__[key] = res; // { txt, used }
+	    renderRaw(res.txt, res.used);
+	    renderParsed(parseDtmfCsv(res.txt));
+	  })
+	  .catch(function (err) {
+	    if (window.console && console.error) console.error('DTMF CSV load failed:', err);
+	    jQuery('#dtmf-summary').text('Failed to load SIP trace CSV for this call.');
     });
 
     return false;
   }
+
   // ---- Button injection ----------------------------------------------------
 
   function makeButton(doc) {
@@ -245,6 +251,7 @@
     });
     obs.observe(document.body, { childList: true, subtree: true });
   }
+
   // ---- Init ----------------------------------------------------------------
 
   onReady(function () {
@@ -262,4 +269,3 @@
     });
   });
 })();
-
